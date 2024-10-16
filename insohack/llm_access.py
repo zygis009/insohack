@@ -1,10 +1,10 @@
 import os
 import anthropic
 
-with open ('prompt.txt', 'r') as file:
+with open('prompt.txt', 'r') as file:
     prompt = file.read()
 
-conversation = [{"role": "system", "content": prompt}]
+conversation = []
 
 
 def create_client():
@@ -19,10 +19,25 @@ def send_conversation_message(client, content):
     message = client.messages.create(
         model="claude-3-haiku-20240307",
         max_tokens=1024,
+        system=prompt,
         messages=conversation,
     )
+    # Message format:
+    # Message(
+    #   id='msg_015MXD4NyE5DMirqWRv8VHFs',
+    #   content=[TextBlock(
+    #       text="Hello! I'm happy to hear that you just bought (...)",
+    #       type='text')],
+    #   model='claude-3-haiku-20240307',
+    #   role='assistant',
+    #   stop_reason='end_turn',
+    #   stop_sequence=None,
+    #   type='message',
+    #   usage=Usage(input_tokens=106, output_tokens=49)
+    # )
+
     # Note: template (with assumptions) for parsing response
-    conversation.append({"role": "assistant", "content": message["content"][0]["text"]})
+    conversation.append({"role": "assistant", "content": message.content[0].text})
     return message
 
 
@@ -30,11 +45,12 @@ def send_single_message(client, content):
     message = client.messages.create(
         model="claude-3-haiku-20240307",
         max_tokens=1024,
-        messages=[{"role": "system", "content": prompt}, {"role": "user", "content": content}],
+        system=prompt,
+        messages=[{"role": "user", "content": content}],
     )
     return message
 
 
 def flush_conversation():
     global conversation
-    conversation = [{"role": "system", "content": prompt}]
+    conversation = []
