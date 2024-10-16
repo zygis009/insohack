@@ -1,8 +1,8 @@
 import os
 import anthropic
+import csv_to_prompt
 
-with open('prompt.txt', 'r') as file:
-    prompt = file.read()
+prompt = csv_to_prompt.get_prompt("Google", "../processed.csv")
 
 conversation = [{"role": "user", "content": "Hello. What is the goal of this conversation?"}]
 
