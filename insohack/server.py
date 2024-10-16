@@ -1,4 +1,6 @@
+import os
 from flask import Flask, request
+from dotenv import load_dotenv
 from twilio.twiml.voice_response import VoiceResponse
 from twilio.rest import Client
 
@@ -34,14 +36,12 @@ def response():
 
 @app.route('/create-call', methods=['POST'])
 def create_call():
-    account_sid = "asjndaksjnda"
-    auth_token = "get_shreked"
-    client = Client(account_sid, auth_token)
+    client = Client(os.environ["TWILIO_ACCOUNT_ID"], os.environ["TWILIO_API_TOKEN"])
 
     call = client.calls.create(
-        url="your_webhook_url",
-        to="your_number",
-        from_="twilio_number"
+        url=os.environ["WEBHOOK_URL"],
+        to=os.environ["NUMBER_TO"],
+        from_=os.environ["NUMBER_FROM"]
     )
 
     return str(call)
@@ -55,4 +55,5 @@ def handle_transcription():
     return str(transcription)
 
 if __name__ == '__main__':
+    load_dotenv()
     app.run(port=8080, debug=True)
