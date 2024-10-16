@@ -4,14 +4,25 @@ import anthropic
 with open('prompt.txt', 'r') as file:
     prompt = file.read()
 
-conversation = []
+conversation = [{"role": "user", "content": "Hello"}]
 
 
 def create_client():
     key = os.getenv('LLM_API_KEY')
     client = anthropic.Client(api_key=key)
+    init_msg = _init_message(client)
+    return client, init_msg
 
-    return client
+
+def _init_message(client):
+    message = client.messages.create(
+        model="claude-3-haiku-20240307",
+        max_tokens=1024,
+        system=prompt,
+        messages=[{"role": "user", "content": "Hello"}],
+    )
+    conversation.append({"role": "assistant", "content": message.content[0].text})
+    return message
 
 
 def send_conversation_message(client, content):
@@ -51,6 +62,7 @@ def send_single_message(client, content):
     return message
 
 
-def flush_conversation():
+def flush_conversation(client):
     global conversation
-    conversation = []
+    conversation = [{"role": "user", "content": "Hello"}]
+    _init_message(client)

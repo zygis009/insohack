@@ -4,11 +4,13 @@ from llm_access import create_client, send_conversation_message, send_single_mes
 
 load_dotenv()
 
-client = create_client()
+client, resp = create_client()
 
-resp = send_conversation_message(client, "Hello")
-print(resp)
+while True:
+    user_input = input(resp.content[0].text + "\n")
 
-resp2 = send_conversation_message(client, "The paintjob")
-print(resp2)
+    if user_input == "exit":
+        break
+
+    resp = send_conversation_message(client, user_input)
 
