@@ -4,25 +4,27 @@ import wave
 import struct
 import math
 import matplotlib.pyplot as plt
+import pygame
 
-CHUNK = 1024*4
+CHUNK = 1024 * 4
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
 SAMPLE_SIZE = 2
 
-def rms( data ):
-    count = len(data)/2
-    format = "%dh"%(count)
-    shorts = struct.unpack( format, data )
+
+def rms(data):
+    count = len(data) / 2
+    format = "%dh" % (count)
+    shorts = struct.unpack(format, data)
     sum_squares = 0.0
     for sample in shorts:
-        n = sample * (1.0/32768)
-        sum_squares += n*n
-    return math.sqrt( sum_squares / count )
+        n = sample * (1.0 / 32768)
+        sum_squares += n * n
+    return math.sqrt(sum_squares / count)
 
 
-def start_recording(use_speakers=False):
+def setup_stream(use_speakers=False):
     p = pyaudio.PyAudio()
 
     if use_speakers:
@@ -35,21 +37,41 @@ def start_recording(use_speakers=False):
                     break
             else:
                 raise IOError("No speaker found")
-        channels=default_speakers["maxInputChannels"]
-        rate=int(default_speakers["defaultSampleRate"])
-        input_device_index=default_speakers["index"]
+        channels = default_speakers["maxInputChannels"]
+        rate = int(default_speakers["defaultSampleRate"])
+        input_device_index = default_speakers["index"]
     else:
-        channels=CHANNELS
-        rate=RATE
-        input_device_index=0
-
+        channels = CHANNELS
+        rate = RATE
+        input_device_index = 0
 
     stream = p.open(format=FORMAT,
                     channels=channels,
-                    rate=rate,   
+                    rate=rate,
                     input_device_index=input_device_index,
                     frames_per_buffer=pyaudio.get_sample_size(FORMAT),
                     input=True)
+
+    return stream, p
+
+
+def detect_sound(stop_event):
+    stream, p = setup_stream()
+
+    while not stop_event.is_set():
+        data = stream.read(CHUNK)
+        if rms(data) > 0.02:
+            stop_event.set()
+            break
+        time.sleep(0.1)
+
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+
+
+def record_audio():
+    stream, p = setup_stream()
 
     frames = []
 
@@ -58,20 +80,26 @@ def start_recording(use_speakers=False):
     while True:
         data = stream.read(CHUNK)
 
-        if rms(data) > 0.02:
+        if rms(data) > 0.01:
             print("sound detected")
+            if pygame.mixer.music.get_busy():
+                pygame.mixer.music.stop()
+                pygame.mixer.music.unload()
             rec_flag = True
             timestamp = time.time()
         if rec_flag:
             frames.append(data)
 
-        if time.time() - timestamp > 2 and len(frames) > 0:
+        if time.time() - timestamp > 4 and len(frames) > 0:
             print("quiet")
             print("saving recording")
-            save_recording(frames, {"rate":rate, "channels":channels, "sample_size":p.get_sample_size(FORMAT)},
-                           "../test.wav")
-            frames = []
-            rec_flag = False
+            save_recording(frames, {"rate": RATE, "channels": CHANNELS, "sample_size": p.get_sample_size(FORMAT)},
+                           "../input.wav")
+            break
+
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
 
 
 def save_recording(recording, config, filename):
@@ -81,7 +109,3 @@ def save_recording(recording, config, filename):
     wf.setframerate(config["rate"])
     wf.writeframes(b''.join(recording))
     wf.close()
-
-
-if __name__ == "__main__":
-    start_recording(False)

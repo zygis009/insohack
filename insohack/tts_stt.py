@@ -1,20 +1,23 @@
 from openai import OpenAI
 import os
 
-api_key = os.getenv("OPENAI_KEY")
 
-client = OpenAI(api_key=api_key)
+def tts_stt_client():
+    api_key = os.getenv("OPENAI_KEY")
+    return OpenAI(api_key=api_key)
 
-def stt(input_filepath_mp3: str) -> str:
-    audio_file= open(input_filepath_mp3, "rb")
+
+def stt(client: OpenAI, input_filepath_mp3: str) -> str:
+    audio_file = open(input_filepath_mp3, "rb")
     transcription = client.audio.transcriptions.create(
-      model="whisper-1", 
-      file=audio_file,
-      response_format="text"
+        model="whisper-1",
+        file=audio_file,
+        response_format="text"
     )
     return transcription
 
-def tts(input_text: str, output_filepath_mp3: str):
+
+def tts(client: OpenAI, input_text: str, output_filepath_mp3: str):
     response = client.audio.speech.create(
         model="tts-1",
         voice="alloy",
