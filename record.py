@@ -1,5 +1,8 @@
 import pyaudiowpatch as pyaudio
 import wave
+import struct
+import math
+import matplotlib.pyplot as plt
 
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
@@ -7,6 +10,15 @@ CHANNELS = 1
 RATE = 44100
 SAMPLE_SIZE = 2
 
+def rms( data ):
+    count = len(data)/2
+    format = "%dh"%(count)
+    shorts = struct.unpack( format, data )
+    sum_squares = 0.0
+    for sample in shorts:
+        n = sample * (1.0/32768)
+        sum_squares += n*n
+    return math.sqrt( sum_squares / count )
 
 def get_recording(num_seconds, use_speakers=False):
     p = pyaudio.PyAudio()
@@ -41,9 +53,16 @@ def get_recording(num_seconds, use_speakers=False):
 
     frames = []
 
+    decay = 0.1
+    power_sum = 0.0
+    power_series = []
     for _ in range(0, int(RATE / CHUNK * num_seconds)):
         data = stream.read(CHUNK)
+        power_sum = (1.0 - decay) * power_sum + decay * rms(data)
+        power_series.append(power_sum)
         frames.append(data)
+    plt.plot(power_series)
+    plt.show()
 
     print("done recording")
 
