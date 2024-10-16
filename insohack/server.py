@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import threading
 import time
 
 import pygame
@@ -46,8 +47,12 @@ def hello_world():
 def webhook():
     """Returns TwiML which prompts the caller to record a message"""
     # Create response audio
-    global resp, openai_client
+    global continue_event
+    while not continue_event.is_set():
+        time.sleep(0.1)
+    global resp, openai_client, result_flag
     tts_stt.tts(openai_client, resp.content[0].text, "../output.mp3")
+    continue_event.clear()
 
     # Start our TwiML response
     response = VoiceResponse()
@@ -55,18 +60,18 @@ def webhook():
     # Use <Say> to give the caller some instructions
     response.play('/play-response')
 
-    # Use <Record> to record the caller's message, transcribe it, and specify an action URL
-    response.record(transcribe=False, recording_status_callback='/proccess-recording')
-
-    # End the call with <Hangup>
-    response.hangup()
+    # Use <Record> to record the caller's message, and use a callback when the recording is complete
+    if result_flag:
+        response.hangup()
+    else:
+        response.record(transcribe=False, recording_status_callback='/proccess-recording')
 
     return str(response)
 
 
 @app.route('/proccess-recording', methods=['POST'])
 def process_recording():
-    global client, resp, openai_client
+    global client, resp, openai_client, result_flag, continue_event
     recording_url = request.form.get('RecordingUrl')
 
     basic = HTTPBasicAuth(os.environ["TWILIO_ACCOUNT_ID"], os.environ["TWILIO_API_TOKEN"])
@@ -77,8 +82,11 @@ def process_recording():
     user_input = tts_stt.stt(openai_client, "../input.wav")
     resp = send_conversation_message(client, user_input)
 
+    continue_event.set()
+
     result = extract_data(resp.content[0].text)
     if result is not None:
+        result_flag = True
         return str(result)
 
     return str(resp.content[0].text)
@@ -87,13 +95,6 @@ def process_recording():
 @app.route('/play-response')
 def play_response():
     return send_file("../output.mp3", mimetype="audio/mpeg")
-
-@app.route('/response', methods=['POST'])
-def response():
-    """Returns TwiML which prompts the caller to record a message"""
-    # Start our TwiML response
-
-    return str(request)
 
 
 @app.route('/create-call', methods=['POST'])
@@ -109,20 +110,14 @@ def create_call():
     return str(call)
 
 
-@app.route('/handle-transcription', methods=['POST'])
-def handle_transcription():
-    """Handles the transcription callback from Twilio"""
-    transcription = request.form.get('TranscriptionText')
-    with open("../transcription.txt", "w") as file:
-        file.write(f"Transcription: {transcription}")
-    return str(transcription)
-
-
 if __name__ == '__main__':
     load_dotenv()
     pygame.mixer.init()
-    global client, resp, openai_client
+    global client, resp, openai_client, result_flag, continue_event
     client, resp = create_client()
     openai_client = tts_stt.tts_stt_client()
+    result_flag = False
+    continue_event = threading.Event()
+    continue_event.set()
 
     app.run(port=8080, debug=True)
