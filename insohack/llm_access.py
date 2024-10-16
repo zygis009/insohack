@@ -4,7 +4,7 @@ import anthropic
 with open('prompt.txt', 'r') as file:
     prompt = file.read()
 
-conversation = [{"role": "user", "content": "Hello"}]
+conversation = [{"role": "user", "content": "Hello. What is the goal of this conversation?"}]
 
 
 def create_client():
