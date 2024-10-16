@@ -1,10 +1,11 @@
+import time
 import pyaudiowpatch as pyaudio
 import wave
 import struct
 import math
 import matplotlib.pyplot as plt
 
-CHUNK = 1024
+CHUNK = 1024*4
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
@@ -20,7 +21,8 @@ def rms( data ):
         sum_squares += n*n
     return math.sqrt( sum_squares / count )
 
-def get_recording(num_seconds, use_speakers=False):
+
+def start_recording(use_speakers=False):
     p = pyaudio.PyAudio()
 
     if use_speakers:
@@ -49,29 +51,27 @@ def get_recording(num_seconds, use_speakers=False):
                     frames_per_buffer=pyaudio.get_sample_size(FORMAT),
                     input=True)
 
-    print(f"recording for {num_seconds} seconds")
-
     frames = []
 
-    decay = 0.1
-    power_sum = 0.0
-    power_series = []
-    for _ in range(0, int(RATE / CHUNK * num_seconds)):
+    timestamp = time.time()
+    rec_flag = False
+    while True:
         data = stream.read(CHUNK)
-        power_sum = (1.0 - decay) * power_sum + decay * rms(data)
-        power_series.append(power_sum)
-        frames.append(data)
-    plt.plot(power_series)
-    plt.show()
 
-    print("done recording")
+        if rms(data) > 0.02:
+            print("sound detected")
+            rec_flag = True
+            timestamp = time.time()
+        if rec_flag:
+            frames.append(data)
 
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
-    assert SAMPLE_SIZE == p.get_sample_size(FORMAT)
-
-    return frames, {"rate":rate, "channels":channels, "sample_size":p.get_sample_size(FORMAT)}
+        if time.time() - timestamp > 2 and len(frames) > 0:
+            print("quiet")
+            print("saving recording")
+            save_recording(frames, {"rate":rate, "channels":channels, "sample_size":p.get_sample_size(FORMAT)},
+                           "../test.wav")
+            frames = []
+            rec_flag = False
 
 
 def save_recording(recording, config, filename):
@@ -84,5 +84,4 @@ def save_recording(recording, config, filename):
 
 
 if __name__ == "__main__":
-    recording, config = get_recording(5, False)
-    save_recording(recording, config, "test.wav")
+    start_recording(False)
