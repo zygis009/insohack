@@ -3,4 +3,6 @@ PyAudioWPatch
 anthropic
 openai
 numpy
-matplotlib
+flask
+twilio
+python-dotenv
