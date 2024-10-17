@@ -7,7 +7,7 @@ Repository for the Insocial AI hackathon
 cd insohack
 python server.py
 ```
-Make sure the server is available in the internet and add that url in the environment variables
+Make sure the server is available in the internet and add that url with endpoint /webhook in the environment variables
 
 ### Call endpoint 
 Call the POST /create-call endpoint to start a call
