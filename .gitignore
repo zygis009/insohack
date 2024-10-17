@@ -162,5 +162,5 @@ cython_debug/
 .idea/
 
 # Created files:
-output.mp3
-input.wav
+*.mp3
+*.wav
