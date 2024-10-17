@@ -40,41 +40,41 @@ result = None
 stop_event = threading.Event()
 
 while True:
-    print(resp.content[0].text+"\n\n")
-    tts_stt.tts(openai_client, resp.content[0].text, "../output.mp3")
-    stop_event.clear()
+    try:
+        print(resp.content[0].text+"\n\n")
+        tts_stt.tts(openai_client, resp.content[0].text, "../output.mp3")
+        stop_event.clear()
 
-    # Start speech detection thread
-    speech_detection_thread = threading.Thread(target=detect_sound, args=(stop_event,))
-    speech_detection_thread.start()
+        # Start speech detection thread
+        speech_detection_thread = threading.Thread(target=detect_sound, args=(stop_event,))
+        speech_detection_thread.start()
 
-    # Play the assistant's response
-    pygame.mixer.music.load("../output.mp3")
-    pygame.mixer.music.play()
-    while pygame.mixer.music.get_busy():
+        # Play the assistant's response
+        pygame.mixer.music.load("../output.mp3")
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            if stop_event.is_set():
+                pygame.mixer.music.stop()
+                break
+            time.sleep(0.1)
+        pygame.mixer.music.unload()
+
+        # Wait for user to start speaking
         if stop_event.is_set():
-            pygame.mixer.music.stop()
+            print("User interrupted responder, recording input...")
+        else:
+            print("Responder finished, waiting for user input...")
+
+        stop_event.clear()
+        record_audio()
+        user_input = tts_stt.stt(openai_client, "../input.wav")
+        print(user_input+"\n-----------------------------------\n")
+        resp = send_conversation_message(client, user_input)
+
+        result = extract_data(resp.content[0].text)
+        if result is not None:
             break
-        time.sleep(0.1)
-    pygame.mixer.music.unload()
-
-    # Wait for user to start speaking
-    if stop_event.is_set():
-        print("User interrupted responder, recording input...")
-    else:
-        print("Responder finished, waiting for user input...")
-
-    stop_event.clear()
-    record_audio()
-    # user_input = input(resp.content[0].text + "\n")
-    user_input = tts_stt.stt(openai_client, "../test.wav")
-    # if user_input == "exit":
-    #     break
-    print(user_input+"\n-----------------------------------\n")
-    resp = send_conversation_message(client, user_input)
-
-    result = extract_data(resp.content[0].text)
-    if result is not None:
-        break
+    finally:
+        stop_event.set()
 
 print(result)
