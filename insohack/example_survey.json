@@ -1,0 +1,24 @@
+{
+  "pages": [
+    {
+      "type": "intro",
+      "text": "Welcome"
+    },
+    {
+      "type": "question",
+      "text": "You're 3 inches deep in your mom and the same is for your dad and you, which way are you moving to get out?",
+      "input": "speech",
+      "needsFollowUp": false
+    },
+    {
+      "type": "question",
+      "text": "On a scale of 7 to 10, how gay are you",
+      "input": "dtmf",
+      "needsFollowUp": false
+    },
+    {
+      "type": "outro",
+      "text": "Later nerd"
+    }
+  ]
+}
