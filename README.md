@@ -9,7 +9,7 @@ Message(
     content=[TextBlock(
     text="Hello! I'm happy to hear that you just bought (...)",
     type='text')],
-    model='claude-3-haiku-20240307',
+    model='claude-3-5-sonnet-20240620',
     role='assistant',
     stop_reason='end_turn',
     stop_sequence=None,

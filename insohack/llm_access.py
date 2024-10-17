@@ -16,7 +16,7 @@ def create_client():
 
 def _init_message(client):
     message = client.messages.create(
-        model="claude-3-haiku-20240307",
+        model="claude-3-5-sonnet-20240620",
         max_tokens=1024,
         system=prompt,
         messages=[{"role": "user", "content": "Hello"}],
@@ -28,7 +28,7 @@ def _init_message(client):
 def send_conversation_message(client, content):
     conversation.append({"role": "user", "content": content})
     message = client.messages.create(
-        model="claude-3-haiku-20240307",
+        model="claude-3-5-sonnet-20240620",
         max_tokens=1024,
         system=prompt,
         messages=conversation,
@@ -40,7 +40,7 @@ def send_conversation_message(client, content):
 
 def send_single_message(client, content):
     message = client.messages.create(
-        model="claude-3-haiku-20240307",
+        model="claude-3-5-sonnet-20240620",
         max_tokens=1024,
         system=prompt,
         messages=[{"role": "user", "content": content}],
