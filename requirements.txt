@@ -1,2 +1,8 @@
 wave
 PyAudioWPatch
+anthropic
+openai
+numpy
+matplotlib
+pandas
+pygame

@@ -1,8 +1,8 @@
 A user has received services from a company. We want the following pieces of feedback from them:
 
-<REQUIRED_FIELDS>
+["rating", "best feature", "worst feature"]
 
 Generate natural questions until they provide all of this information.
-Then return the flag <END_OF_CONVERSATION> followed by this data as a JSON object alongside no other text.
+Then thank them for the answers and return the flag <END_OF_CONVERSATION> followed by this data as a JSON object alongside no other text.
 Keep the conversation concise but friendly.
 Only ask one question at once and do not ask for data already given by the user in some shape or form.
