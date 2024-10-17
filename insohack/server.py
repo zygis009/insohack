@@ -195,7 +195,8 @@ def process_recording():
     result = extract_data(resp.content[0].text)
     if result is not None:
         result_flag = True
-        return str(result)
+        print("RESULT:\n\n"+str(result))
+        return "Thank you for your feedback. We wish you a pleasant day!"
 
     return str(resp.content[0].text)
 
