@@ -12,13 +12,13 @@ from requests.auth import HTTPBasicAuth
 from twilio.twiml.voice_response import VoiceResponse, Gather
 from twilio.rest import Client
 
-from insohack import tts_stt
-from insohack.llm_access import create_client, send_conversation_message
+import tts_stt
+from llm_access import create_client, send_conversation_message
 
 app = Flask(__name__)
 
 # Load survey questions into memory
-with open("insohack/example_survey.json", "r") as survey_file:
+with open("example_survey.json", "r") as survey_file:
     pages = json.load(survey_file)["pages"]
 
 
@@ -66,19 +66,6 @@ def save_answer_for_question(request, page_idx, is_follow_up):
     # Write back the updated responses to the file
     with open("insohack/response.json", "w") as outfile:
         json.dump(responses, outfile)
-
-
-@app.route("/create-call", methods=["POST"])
-def create_call():
-    client = Client(os.environ["TWILIO_ACCOUNT_ID"], os.environ["TWILIO_API_TOKEN"])
-
-    call = client.calls.create(
-        url=os.environ["WEBHOOK_URL"],
-        to=os.environ["NUMBER_TO"],
-        from_=os.environ["NUMBER_FROM"],
-    )
-
-    return "<3"
 
 
 @app.route("/start-survey", methods=["POST"])
@@ -220,7 +207,7 @@ def create_call():
 
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv(override=True)
     pygame.mixer.init()
     global client, resp, openai_client, result_flag, continue_event
     client, resp = create_client()
